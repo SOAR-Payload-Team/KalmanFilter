@@ -1,6 +1,5 @@
 """
-
-
+Refrences/Research
 
 https://www.kalmanfilter.net/stateextrap.html
 
@@ -9,13 +8,8 @@ https://www.cs.cmu.edu/~motionplanning/papers/sbp_papers/kalman/kleeman_understa
 https://filterpy.readthedocs.io/en/latest/kalman/KalmanFilter.html
 
 https://github.com/rlabbe/filterpy
-
-
-
-
-
-
 """
+
 
 import matplotlib.pyplot as plt
 import numpy as np
