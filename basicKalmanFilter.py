@@ -8,6 +8,10 @@ https://www.cs.cmu.edu/~motionplanning/papers/sbp_papers/kalman/kleeman_understa
 https://filterpy.readthedocs.io/en/latest/kalman/KalmanFilter.html
 
 https://github.com/rlabbe/filterpy
+
+https://stackoverflow.com/users/1904279/anton?tab=profile
+
+
 """
 
 
@@ -19,9 +23,10 @@ import numpy as np
 # Pest = previous estimate
 # Mval = measured value
 # gain = kalman gain
-
+# dt = time between measurements
+# accVar = acceleration variance
 def kalmanGain(Eest,Emea):
-    gain = float(Eest / (Eest + Emea))
+    gain = np.float16(Eest / (Eest + Emea))
     return gain 
 
 def currentEst(Pest,Mval,gain):
@@ -29,6 +34,12 @@ def currentEst(Pest,Mval,gain):
 
 def updateErrorEstimate(Pest,gain):
     return (1-gain)*(Pest)
+
+def getMeasurement(n):
+    altitudeData =  np.genfromtxt('fixedAltitudeData.csv',delimiter=',', dtype = np.float16,skip_header=True)
+    accelerationData = np.genfromtxt('fixedAccelerationData.csv',delimiter=',', dtype = np.float16,skip_header=True)
+    return altitudeData[n], accelerationData[n]
+
 
 def filter(data):
     Eest = 10
@@ -62,26 +73,57 @@ def filterRepeat(data,estimates,Eest):
     
     return newEstimates,Eest
 
-plt.close('all')
-data = np.genfromtxt('andromedaAltitude.csv',delimiter=',', dtype = float)
-#data = np.genfromtxt('sampleAltitude.csv',delimiter=',', dtype = float)
+def workingBasicKalFilter():
+    plt.close('all')
+
+    dt = 0.02
+    accVar = 5
+    ''''
+
+    data array = [Z, Vz, Az]
+
+    x[k+1] = A*x[k] + B*u[k] + w
+
+    state transition matrix
+    A =     [[ 1, dt ]
+            [ 0, 1  ]]
+
+    B =     [ 0.5*(dt**2), dt]
 
 
-estimates,Eest = filter(data)
-print(Eest)
-estimates1,Eest = filterRepeat(data,estimates,Eest)
-#estimates2,Eest = filterRepeat(estimates,estimates1,Eest)
-
-for i in range(1000):
-    estimates1,Eest = filterRepeat(data,estimates1,Eest)
-    #estimates1,Eest = filterRepeat(estimates1,estimates2,Eest)
-    #estimates2,Eest = filterRepeat(estimates2,estimates1,Eest)
-
-plt.plot(data)
-#plt.plot(estimates)
-plt.plot(estimates1)
-#plt.plot(estimates2)
+    '''
 
 
-plt.show()
 
+
+
+    altitudeData =  np.genfromtxt('andromedaAltitude.csv',delimiter=',', dtype = np.float16,skip_header=True)
+
+    accelerationData = np.genfromtxt('andromedaAcceleration.csv',delimiter=',', dtype = np.float16,skip_header=True)
+
+    estimates,Eest = filter(altitudeData)
+    estimates1,Eest = filterRepeat(altitudeData,estimates,Eest)
+    #estimates2,Eest = filterRepeat(estimates,estimates1,Eest)
+
+    for i in range(1000):
+        estimates1,Eest = filterRepeat(altitudeData,estimates1,Eest)
+        #estimates1,Eest = filterRepeat(estimates1,estimates2,Eest)
+        #estimates2,Eest = filterRepeat(estimates2,estimates1,Eest)
+
+    plt.plot(altitudeData)
+    #plt.plot(estimates)
+    plt.plot(estimates1)
+    #plt.plot(estimates2)
+
+
+    plt.show()
+
+def main():
+    workingBasicKalFilter()
+
+if __name__ == '__main__':
+    main()
+
+
+# Other Sample data \/
+#altitudeData = np.genfromtxt('sampleAltitude.csv',delimiter=',', dtype = float)
