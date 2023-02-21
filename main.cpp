@@ -8,11 +8,11 @@
  * Language: C++
  */
 
-#include <conio.h>
+#include <iostream>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "Eigen/Dense"
+#include "Eigen\Dense"
 #include "kalmanFilter.h"
 
 #define intialX 7000.0  // Set inital altitude
@@ -23,31 +23,44 @@
 #define r_var pow(r_std,2)  // Measurement noise variance
 #define q_var pow(q_std,2)  // Process noise variance
 
+using namespace std;
+using namespace Eigen;
+
 void initialize(struct kalmanFilter& kalFil);
 
 int main(int argc, char const *argv[])
 {
-    kalmanFilter kalFil = kalmanFilter(intialX);
-    kalFil.setTimeInterval(dt);
-    //printf("%.2f, %.2f",kalFil.X[0],kalFil.X[1]);
-    printf("%.2f",kalFil.getTI());
-    //initialize(kalFil);
     
+    kalmanFilter kalFil = kalmanFilter(intialX, dt);
+    initialize(kalFil);
+    
+
     double u = 0.0;
     
-    kalFil.writePredicted();
-
+    //kalFil.writePrev();
+    //cout << kalFil.Q << endl;
 
 
     return 0;
 }
 
 void initialize(struct kalmanFilter& kalFil ){
-    kalFil.Q[0][0] = 0.25*pow(dt,4)*q_var;
-    kalFil.Q[0][1] = 0.5*pow(dt,3)*q_var;
-    kalFil.Q[1][0] = 0.50*pow(dt,3)*q_var;
-    kalFil.Q[1][1] = 1.0*pow(dt,2)*q_var;
+    kalFil.F << 1, dt,
+                0, 1;
+
+    kalFil.R = pow(r_std,2);
+
+    kalFil.H << 1.0, 0.0;
+
+    kalFil.P << pow(0.1, 2), 0,
+                0, pow(0.03, 2);
+
+    kalFil.Q << 0.25*pow(dt,4)*q_var, 0.5*pow(dt,3)*q_var,
+                0.50*pow(dt,3)*q_var, 1.0*pow(dt,2)*q_var;
+    
+    kalFil.B << 0.5*pow(dt,2), dt;
 }
+
 /*
 // Initalize all parameters of kalmanFilter
 void initialize(struct kalmanFilter& kalFil){
