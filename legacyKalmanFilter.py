@@ -23,8 +23,7 @@ import numpy as np
 # Pest = previous estimate
 # Mval = measured value
 # gain = kalman gain
-# dt = time between measurements
-# accVar = acceleration variance
+
 def kalmanGain(Eest,Emea):
     gain = np.float16(Eest / (Eest + Emea))
     return gain 
@@ -75,28 +74,6 @@ def filterRepeat(data,estimates,Eest):
 
 def workingBasicKalFilter():
     plt.close('all')
-
-    dt = 0.02
-    accVar = 5
-    ''''
-
-    data array = [Z, Vz, Az]
-
-    x[k+1] = A*x[k] + B*u[k] + w
-
-    state transition matrix
-    A =     [[ 1, dt ]
-            [ 0, 1  ]]
-
-    B =     [ 0.5*(dt**2), dt]
-
-
-    '''
-
-
-
-
-
     altitudeData =  np.genfromtxt('andromedaAltitude.csv',delimiter=',', dtype = np.float16,skip_header=True)
 
     accelerationData = np.genfromtxt('andromedaAcceleration.csv',delimiter=',', dtype = np.float16,skip_header=True)
@@ -114,7 +91,6 @@ def workingBasicKalFilter():
     #plt.plot(estimates)
     plt.plot(estimates1)
     #plt.plot(estimates2)
-
 
     plt.show()
 
