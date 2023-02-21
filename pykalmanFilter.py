@@ -24,18 +24,19 @@ accelerationData = np.genfromtxt('fixedAccelerationData.csv',delimiter=',', dtyp
 
 cv = KalmanFilter(dim_x=2, dim_z=1,dim_u=1)
 
-cv.x = np.array([7000., 0.]) # position, velocity  # Current state estimate
-cv.F = np.array([[1, dt], [0, 1]])              # State Transition matrix
-cv.R = np.array([[r_std**2]])                   # Measurement noise covariance matrix
+cv.x = np.array([7000.,0.]) # position, velocity  # Current state estimate
+cv.F = np.array([[1, dt], 
+                 [0, 1]])              # State Transition matrix
+cv.R = np.array((r_std**2))                   # Measurement noise covariance matrix
 cv.H = np.array([[1., 0.]])                     # Measurement function
 cv.P = np.diag([.1**2, .03**2])                 # Current state covariance matrix
-cv.Q = Q_discrete_white_noise(2, dt, q_std**2)  # Process noise covariance matrix
-cv.B = np.array([ [0.5*(dt**2)], 
+cv.Q = Q_discrete_white_noise(dim=2, dt=dt,var= q_std**2)  # Process noise covariance matrix
+cv.B = np.array([ [0.5*(dt**2)], # Control-input matrix 
                   [dt]])
 
 saver = Saver(cv)
 for i,z in enumerate(altitudeData):
-    cv.predict([accelerationData[i]*9.807/1000])
+    cv.predict(u=[accelerationData[i]*9.807/1000])
     cv.update([z])
     saver.save() # save the filter's state
 saver.to_array()
@@ -45,9 +46,19 @@ plt.plot(saver.x[:, 0],label='Estimates')
 plt.plot(saver.x_prior[:, 0],label='Prev Estimates')
 plt.legend()
 # plot mahalanobis distance
-plt.figure()
-plt.plot(saver.mahalanobis)
-plt.legend()
+'''plt.figure()
+percentage = []
+for i in range(np.size(altitudeData)):
+    if altitudeData[i] == 0:
+        continue
+    else:
+        percentage.append((saver.x[:, 0][i]/altitudeData[i])*100)
+print(percentage)
+'''
+#plt.plot(percentage,label ='Percentage')
+#plt.yticks([x+1 for x in range(100)])
+#plt.plot(saver.mahalanobis)
+#plt.legend()
 plt.show()
 
 
