@@ -19,31 +19,37 @@ from filterpy.common import Q_discrete_white_noise, Saver
 
 r_std, q_std = 0.003, 1
 dt = 0.02
-altitudeData =  np.genfromtxt('fixedAltitudeData.csv',delimiter=',', dtype = np.float16,skip_header=True)
-accelerationData = np.genfromtxt('fixedAccelerationData.csv',delimiter=',', dtype = np.float16,skip_header=True)
+altitudeData = np.genfromtxt(
+    'data/fixedAltitudeData.csv', delimiter=',', dtype=np.float16, skip_header=True)
+accelerationData = np.genfromtxt(
+    'data/fixedAccelerationData.csv', delimiter=',', dtype=np.float16, skip_header=True)
 
-cv = KalmanFilter(dim_x=2, dim_z=1,dim_u=1)
+cv = KalmanFilter(dim_x=2, dim_z=1, dim_u=1)
 
-cv.x = np.array([7000.,0.]) # position, velocity  # Current state estimate
-cv.F = np.array([[1, dt], 
+cv.x = np.array([7000., 0.])  # position, velocity  # Current state estimate
+cv.F = np.array([[1, dt],
                  [0, 1]])              # State Transition matrix
-cv.R = np.array((r_std**2))                   # Measurement noise covariance matrix
+# Measurement noise covariance matrix
+cv.R = np.array((r_std**2))
 cv.H = np.array([[1., 0.]])                     # Measurement function
-cv.P = np.diag([.1**2, .03**2])                 # Current state covariance matrix
-cv.Q = Q_discrete_white_noise(dim=2, dt=dt,var= q_std**2)  # Process noise covariance matrix
-cv.B = np.array([ [0.5*(dt**2)], # Control-input matrix 
-                  [dt]])
+# Current state covariance matrix
+cv.P = np.diag([.1**2, .03**2])
+# Process noise covariance matrix
+cv.Q = Q_discrete_white_noise(dim=2, dt=dt, var=q_std**2)
+
+cv.B = np.array([[0.5*(dt**2)],  # Control-input matrix
+                 [dt]])
 
 saver = Saver(cv)
-for i,z in enumerate(altitudeData):
+for i, z in enumerate(altitudeData):
     cv.predict(u=[accelerationData[i]*9.807/1000])
     cv.update([z])
-    saver.save() # save the filter's state
+    saver.save()  # save the filter's state
 saver.to_array()
-plt.plot(altitudeData,label='Measurements')
-plt.plot(saver.x[:, 0],label='Estimates')
+plt.plot(altitudeData, label='Measurements')
+plt.plot(saver.x[:, 0], label='Estimates')
 # plot all of the priors
-plt.plot(saver.x_prior[:, 0],label='Prev Estimates')
+plt.plot(saver.x_prior[:, 0], label='Prev Estimates')
 plt.legend()
 # plot mahalanobis distance
 '''plt.figure()
@@ -55,37 +61,11 @@ for i in range(np.size(altitudeData)):
         percentage.append((saver.x[:, 0][i]/altitudeData[i])*100)
 print(percentage)
 '''
-#plt.plot(percentage,label ='Percentage')
-#plt.yticks([x+1 for x in range(100)])
-#plt.plot(saver.mahalanobis)
-#plt.legend()
+# plt.plot(percentage,label ='Percentage')
+# plt.yticks([x+1 for x in range(100)])
+# plt.plot(saver.mahalanobis)
+# plt.legend()
 plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 """

@@ -1,1 +1,0 @@
-Altitude(m*10), Velocity(m/s)
