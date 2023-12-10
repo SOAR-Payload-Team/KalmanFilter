@@ -11,7 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
-#include "KalmanFilter.h"
+#include "Kalman.h"
 
 using namespace std;
 
@@ -44,7 +44,7 @@ int main(int argc, char const *argv[])
     P0 << (0.1 * 0.1), 0, 0, (0.03 * 0.03);
 
     /* Create The Filter */
-    KalmanFilter filter1(2, 1, 1);
+    Kalman filter1(2, 1, 1);
 
     /* Initialize the Filter*/
     filter1.setFixed(F, H, Q, R, B);
