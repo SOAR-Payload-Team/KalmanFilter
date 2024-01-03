@@ -10,71 +10,37 @@
 #include "Kalman.h"
 using namespace std;
 
-/*
- * Constructor
- * dim_x: number of state variables
- *      For example if tracking altitude and velocity
- *      in 2 dimensions, dim_x would be 4
- * dim_z: number of measurement inputs
- * dim_u: control vector dimension (if there is no input, set to zero)
- */
-Kalman::Kalman(int dim_x, int dim_z, int dim_u)
+Kalman::Kalman(int dim_x, int dim_z)
 {
     this->dim_x = dim_x;
     this->dim_z = dim_z;
-    this->dim_u = dim_u;
 }
 
-/*
- * Set Fixed Matrix
- * Must be run before first update() call
- * Saves F, H, Q, R, and B matrices
- * Set dimensions of all matrices passed to function accoring to guide in Kalman.h
- */
-void Kalman::setFixed(MatrixXf &F_in, MatrixXf &H_in, MatrixXf &Q_in, MatrixXf &B_in)
+void Kalman::init(MatrixXf &F_in, MatrixXf &H_in, MatrixXf &Qa_in, VectorXf &Z_in, MatrixXf &R_in, VectorXf &X_init, MatrixXf &P_init)
 {
+    // set fixed matrices
     F = &F_in;
     H = &H_in;
-    Q = &Q_in;
-    B = &B_in;
+    Q = *F * Qa_in * F->transpose();
     I = I.Identity(dim_x, dim_x);
-    K.resize(dim_x, dim_z);
-    K.Constant(0);
-}
+    K.Zero(dim_x, dim_z);
 
-/* Set Initial state Matrices + point to control matrices that update with measurements
- * Must also be run before first update() call*/
-void Kalman::setControl(VectorXf &Z_in, MatrixXf &R_in, double X0, double P0)
-{
+    // set state, measurement matrices
     Z = &Z_in;
     R = &R_in;
-    Xpred.resize(dim_x);
-    Xpred.Constant(X0);
-    Ppred.resize(dim_x, dim_x);
-    Ppred.Constant(P0);
+    X.resize(dim_x);
+    X = X_init;
+    Xpred = *F * X; // Predict next state
+    P.resize(dim_x, dim_x);
+    P = P_init;
+    Ppred = (*F * P * F->transpose()) + Q; // Predict next covariance
 }
-
-// /* Do prediction based off physical system */
-// void Kalman::predict()
-// {
-// }
-
-// /* Correct the prediction, using mesaurement*/
-// void Kalman::correct(VectorXf Z)
-// {
-//     K = (P * H->transpose()) * (*H * P * H->transpose() + *R).inverse();
-
-//     X = X + K * (Z - *H * X);
-
-//     P = (I - K * *H) * P;
-
-//     X0 = X;
-//     P0 = P;
-// }
 
 void Kalman::update()
 {
-    K = (Ppred * H->transpose()).cross((*H * Ppred * H->transpose() + *R).inverse);
-    X = Xpred + K.cross(Z)
-
+    K = (Ppred * H->transpose()) * ((*H * Ppred * H->transpose() + *R).inverse()); // kalman gain update equation
+    X = Xpred + K * (*Z - (*H * Xpred));                                           // state update equation;
+    P = ((I - K * *H) * Ppred)*((I - K * *H).transpose()) + (K * *R * K.transpose()); // Covariance update equation
+    Xpred = *F * X;                        // Predict next state
+    Ppred = (*F * P * F->transpose()) + Q; // Predict next covariance
 }

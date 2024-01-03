@@ -15,70 +15,90 @@
 
 using namespace Eigen;
 
-/*
- *	Matrix Dimension must be:
- * 
- * 
- *
- *
+/* dim_x: number of state variables (size of state vector X)
+ * dim_z: number of measurement inputs (size of measurement vector Z)
+
+ * Fixed Matrix Dimensions must be:
+ * F - dim_x x dim_x
+ * H - dim_z x dim_x
+ * Q - dim_x x dim_x (also goes for Qa)
+ * R - dim_z x dim_z
  */
 
 class Kalman
 {
+public:
     /*
      * Constructor
-     * dim_x: number of state variables
-     *      For example if tracking altitude and velocity
-     *      in 2 dimensions, dim_x would be 4
-     * dim_z: number of measurement inputs
-     * dim_u: control vector dimension (if there is no input, set to zero)
+     * dim_x: number of state variables (size of state vector X)
+     * dim_z: number of measurement inputs (size of measurement vector Z)
      */
-    Kalman(int dim_x, int dim_z, int dim_u);
+    Kalman(int dim_x, int dim_z);
 
-    /*
-     * Set Fixed Matrix (NO INPUT)
-     * Saves F, H, Q, and R matrices
-     */
-    virtual void setFixed(MatrixXf* F, MatrixXf* H, MatrixXf* Q, MatrixXf* R);
+    /* Initalize the Kalman filter
 
-    /*
-     * Set Fixed Matrix (WITH INPUT)
-     * Saves F, H, Q, R, and B matrices
-     */
-    virtual void setFixed(MatrixXf &F_in, MatrixXf &H_in, MatrixXf &Q_in, MatrixXf &R_in, MatrixXf &B_in);
+    F_in -> State transition matrix (dim_x X dim_x)
+    H_in -> Observation matrix (dim_z X dim_x)
+    Qa_in -> Process noise covariance initializer, see below (dim_x X dim_x)
+    Z_in -> Measurement vector. Update passed vector with new values each time step. (dim_z)
+    R_in -> Measurement Covariance matrix. Update passed matrix with new values each time step. (dim_z X dim_z)
+    X_init -> inital state vector. (dim_x)
+    P_init -> inital estimate covariance (dim_x X dim_x)
 
-    /* Set Initial Value */
-    virtual void setControl(VectorXf &X_in, MatrixXf &P_in, double X0, double P0);
+    Note: Qa should be initialized as s^2[M], where M has a 1 on the main diagonal corresponding to each
+    * state variable associated with s^2. For instance, state vector [x,y] where only y is affected by variance has Qa =
+    * [0,  0]
+    * [0,s^2]
+    */
+    void init(MatrixXf &F_in, MatrixXf &H_in, MatrixXf &Qa_in, VectorXf &Z_in, MatrixXf &R_in, VectorXf &X_init, MatrixXf &P_init);
 
-    /* Do prediction*/
-    void predict(void);
+    /*Update state variables with new input data*/
+    void update();
 
-    /* Do correction */
-    void correct(VectorXf Z);    
-    
-    /* Problem Dimension */
-    int dim_x; // State vector dimension
+    VectorXf getState() {return X;}
+
+    VectorXf getNextState() {return Xpred;}
+
+    MatrixXf getCov() {return P;}
+
+    MatrixXf getNextCov() {return Ppred;}
+
+    MatrixXf getK() {return K;}
+
+    MatrixXf getQ() {return Q;}
+
+protected:
+
+    /* Problem Dimensions */
+    int dim_x;
     int dim_z;
-    int dim_u; // Control vector (input) dimension (if there is not input, set to zero)
 
     /* Fixed Matrices */
-    MatrixXf *F; // State Transition matrix
-    MatrixXf *B; // Control-input matrix
-    MatrixXf *H; // Mesaurement function
-    MatrixXf *Q; // Process Noise Covariance matrix
-    MatrixXf *R; // Measurement Noise Covariance matrix
-    MatrixXf I;  // Identity matrix
+    MatrixXf *F;  // State Transition matrix
+    MatrixXf *H;  // Mesaurement function
+    MatrixXf *Qa; // To Determine matrix Q
+    MatrixXf Q;   // Process Noise Covariance matrix
+    MatrixXf I;   // Identity matrix
 
-    /* Variable Matrices */
-    VectorXf X; // Current State vector
-    MatrixXf P; // Current State Covariance matrix
-    VectorXf Xpred; //Predicted state matrix
-    MatrixXf Ppred; //Predicted Coviariance matrix
-    MatrixXf K; // Kalman Gain matrix
+    /* State Matrices */
+    VectorXf X;     // Current State vector
+    MatrixXf P;     // Current State Covariance matrix
+    VectorXf Xpred; // Predicted state matrix
+    MatrixXf Ppred; // Predicted Coviariance matrix
+    MatrixXf K;     // Kalman Gain matrix
 
-    /* Input Matrices */
-    VectorXf Z; //measurement Matrix
-    MatrixXf R; // measurement Covariance matrix
-
+    /* Measurement Matrices */
+    VectorXf *Z; // measurement Matrix
+    MatrixXf *R; // measurement Covariance matrix
 };
 #endif
+
+/* Notes:
+-   Note that any system input equations are omitted -
+    it is assumed that the system state is independent of actions taken by the filter / the control system that the filter informs
+-   Note that Zn has a 'true' value and an observed value - for instance:
+    Xn is the position, velocity, acceleration of a car in 3 dimensions and Zn is the (measured) acceleration of the car in 3 dimensions.
+    This means that the state update equation, to find the difference in measured acceleration between time step n-1 and time step n,
+    must use the "true" value of Zn-1, not the value actually measured at time step n-1. To do this, it uses the state at time n-1 and
+    guesses what the 'true' measurements must have been, as in the equation Zn = HXn.
+*/
