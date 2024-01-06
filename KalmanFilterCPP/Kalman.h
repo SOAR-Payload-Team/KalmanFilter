@@ -5,11 +5,17 @@
  *
  * Authors: Findlay Brown and Aiden Ballard
  * Language: C++
+ * 
+ * Class for multivariate Kalman filters with no control input support. 
+ * Dimensions for filter MUST be set either with contructor or init().
+ * init() must be called before any calls to update().
+ * See comments for init() function for important details.
  */
 
 // include path for eigen
 // #include <eigen-path>
-#include "eigen-3.4.0\\eigen-3.4.0\\Eigen\\Eigen"
+#include "eigen-3.4.0\\eigen-3.4.0\\Eigen\\Core"
+#include "eigen-3.4.0\\eigen-3.4.0\\Eigen\\Geometry"
 #ifndef Kalman_h
 #define Kalman_h
 
@@ -34,6 +40,7 @@ public:
      * dim_z: number of measurement inputs (size of measurement vector Z)
      */
     Kalman(int dim_x, int dim_z);
+    Kalman();
 
     /* Initalize the Kalman filter
 
@@ -50,10 +57,30 @@ public:
     * [0,  0]
     * [0,s^2]
     */
-    void init(MatrixXf &F_in, MatrixXf &H_in, MatrixXf &Qa_in, VectorXf &Z_in, MatrixXf &R_in, VectorXf &X_init, MatrixXf &P_init);
+    virtual void init(MatrixXf &F_in, MatrixXf &H_in, MatrixXf &Qa_in, VectorXf &Z_in, MatrixXf &R_in, VectorXf &X_init, MatrixXf &P_init);
 
-    /*Update state variables with new input data*/
-    void update();
+    /* Initalize the Kalman filter
+    
+    dim_xin -> size of state vector
+    dim_zin -> size of measurement vector
+    F_in -> State transition matrix (dim_x X dim_x)
+    H_in -> Observation matrix (dim_z X dim_x)
+    Qa_in -> Process noise covariance initializer, see below (dim_x X dim_x)
+    Z_in -> Measurement vector. Update passed vector with new values each time step. (dim_z)
+    R_in -> Measurement Covariance matrix. Update passed matrix with new values each time step. (dim_z X dim_z)
+    X_init -> inital state vector. (dim_x)
+    P_init -> inital estimate covariance (dim_x X dim_x)
+
+    Note: Qa should be initialized as s^2[M], where M has a 1 on the main diagonal corresponding to each
+    * state variable associated with s^2. For instance, state vector [x,y] where only y is affected by variance has Qa =
+    * [0,  0]
+    * [0,s^2]
+    */
+    virtual void init(int dim_xin, int dim_zin, MatrixXf &F_in, MatrixXf &H_in, MatrixXf &Qa_in, VectorXf &Z_in, MatrixXf &R_in, VectorXf &X_init, MatrixXf &P_init);
+
+    /*Update the filter with new measurements
+    Note that this reads the variables Z and R passed to init() for new data.*/
+    virtual void update();
 
     VectorXf getState() {return X;}
 
@@ -76,7 +103,6 @@ protected:
     /* Fixed Matrices */
     MatrixXf *F;  // State Transition matrix
     MatrixXf *H;  // Mesaurement function
-    MatrixXf *Qa; // To Determine matrix Q
     MatrixXf Q;   // Process Noise Covariance matrix
     MatrixXf I;   // Identity matrix
 
