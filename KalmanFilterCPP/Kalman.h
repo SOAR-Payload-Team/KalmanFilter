@@ -82,18 +82,17 @@ public:
     Note that this reads the variables Z and R passed to init() for new data.*/
     virtual void update();
 
+    /* Returns VectorXf-type state vector for current state*/
     VectorXf getState() {return X;}
 
+    /*Returns VectorXF-type state vector for predicted next state*/
     VectorXf getNextState() {return Xpred;}
 
+    /*Returns MatrixXf-type covariance matrix for current state*/
     MatrixXf getCov() {return P;}
 
+    /*Returns MatrixXf-type covariance matrix for predicted next state*/
     MatrixXf getNextCov() {return Ppred;}
-
-    MatrixXf getK() {return K;}
-
-    MatrixXf getQ() {return Q;}
-
 
 protected:
 

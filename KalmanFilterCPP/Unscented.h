@@ -58,12 +58,12 @@ protected:
 
     /*Takes state sigma points and transforms them to the measurement space (Ex: returning a Measurement sigma point matrix). Must be overwritten with 
     non-linear observation equations. Uses H matrix passed to init() function by default (useful if observation equations are linear).*/
-    virtual MatrixXf observe(MatrixXf sigmaX);
+    MatrixXf observe(MatrixXf sigmaX);
 
     /*Takes state vector X and calculates state based off of previous state, to be stored in Xpred.  Must be overwritten with
     non-linear system dynamics. Uses F matrix passed to init() by default (useful if system dynamics are linear) 
     X will be a dim_x X 1 matrix, output must also be a dim_x X 1 matrix.*/
-    virtual MatrixXf predict(MatrixXf sigmaX);
+    MatrixXf predict(MatrixXf sigmaX);
 
     /*Function to perform the unscented transform*/
     void uTransform();
