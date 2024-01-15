@@ -94,6 +94,7 @@ public:
 
     MatrixXf getQ() {return Q;}
 
+
 protected:
 
     /* Problem Dimensions */

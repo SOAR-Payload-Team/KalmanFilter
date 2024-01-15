@@ -4,7 +4,7 @@
  * Contains: Functions for kalman filter
  *
  * Authors: Findlay Brown and Aiden Ballard
- * Language: C++
+ * Language: C++ (english)
  */
 
 #include "Kalman.h"

@@ -3,9 +3,7 @@ test.exe
 test2.py
 atest.py
 fixData.py
-a.exe
-test.cpp
 
-Eigen
-Eigen3
-stuff
+test.obj
+Kalman.obj
+Unscented.obj
